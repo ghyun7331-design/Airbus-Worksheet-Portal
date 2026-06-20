@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>AIRBUS WORKSHEET PORTAL</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    :root { 
+      --navy: #00205B; --blue: #005587; --cyan: #00b5e2; 
+      --bg-gray: #f4f7f9; --white: #FFFFFF; --red: #D22730; 
+      --text: #333333; --border: #cfd8dc; 
+      --highlight: #FFF9C4; 
+    }
+    
+    /* 화면을 꽉 채우는 모바일 최적화 레이아웃 (가로 스크롤 방지) */
+    html, body { width: 100%; overflow-x: hidden; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', 'Malgun Gothic', Arial, sans-serif; background-color: var(--bg-gray); display: flex; justify-content: center; color: var(--text); }
+    
+    .container { width: 100%; max-width: 100vw; background: var(--white); border-radius: 0; box-shadow: none; border-top: 6px solid var(--navy); min-height: 100vh; position: relative; overflow-x: hidden; }
+    
+    .header { padding: 20px 30px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background-color: var(--white); flex-wrap: wrap; }
+    /* 모바일에서 제목이 잘리지 않도록 nowrap 제거 및 줄바꿈 허용 */
+    .header h2 { margin: 0; color: var(--navy); font-size: 22px; font-weight: 800; text-transform: uppercase; letter-spacing: -0.5px; word-break: keep-all; line-height: 1.3; }
+    
+    .content { padding: 20px 30px; width: 100%; }
+
+    .search-box { width: 100%; max-width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: 4px; box-sizing: border-box; outline: none; transition: 0.3s; background-color: #FAFAFA; }
+    .search-box:focus { border-color: var(--cyan); background-color: #fff; box-shadow: 0 0 0 4px rgba(0, 181, 226, 0.1); }
+    
+    .status-bar { text-align: right; font-size: 14px; color: var(--blue); font-weight: bold; margin: 10px 0; }
+    
+    .data-card { padding: 15px 20px; border-bottom: 1px solid #edf2f7; transition: 0.2s; border-left: 4px solid transparent; background: #fff; word-wrap: break-word; overflow-wrap: break-word; }
+    .data-card:hover { background-color: #f0f7ff; border-left-color: var(--cyan); }
+    
+    .list-wrapper { width: 100%; overflow-x: hidden; overflow-y: auto; max-height: 75vh; border: 1px solid var(--border); border-radius: 4px; -webkit-overflow-scrolling: touch; background: white; }
+
+    .gii-filter-container { display: flex; flex-direction: column; gap: 15px; margin-bottom: 15px; width: 100%; background: #fff; padding: 20px; border: 1px solid var(--border); border-radius: 6px; box-sizing: border-box; }
+    .gii-search-title { font-size: 13px; font-weight: bold; color: var(--navy); text-transform: uppercase; margin-bottom: 8px; display: block; }
+    
+    .gii-select { width: 100%; max-width: 100%; padding: 14px; font-size: 15px; background-color: #FAFAFA; border: 2px solid var(--border); border-radius: 4px; outline: none; cursor: pointer; transition: 0.2s; box-sizing: border-box; font-weight: bold; color: var(--navy); white-space: normal; }
+    .gii-select:focus { border-color: var(--navy); background-color: #fff; }
+
+    .gii-btn { width: 100%; padding: 14px; font-size: 15px; font-weight: bold; color: white; background-color: var(--navy); border: none; border-radius: 4px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; text-align: center; }
+    .gii-btn:hover { background-color: var(--cyan); }
+    
+    .gii-badge { padding: 5px 10px; border-radius: 3px; font-size: 12px; font-weight: bold; white-space: normal; word-break: keep-all; border: 1px solid transparent; display: inline-block; }
+    .gii-badge.fleet { background: var(--navy); color: #fff; }
+    .gii-badge.ata { background: #e2e8f0; color: var(--blue); border-color: #cbd5e1; }
+    .gii-badge.type { background: #dcfce7; color: #166534; border-color: #bbf7d0; }
+    .gii-badge.girii { background: #fee2e2; color: #991b1b; border-color: #f87171; }
+    .gii-badge.code { background: #fef08a; color: #854d0e; border-color: #fde047; }
+
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.6); z-index: 9999; display: none; justify-content: center; align-items: center; padding: 10px; }
+    .modal-window { background: #fff; width: 100%; max-width: 100%; max-height: 95vh; border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    .modal-header { background: var(--navy); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+    .modal-title { font-size: 15px; font-weight: bold; margin: 0; line-height: 1.3; }
+    .modal-close-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; white-space: nowrap; font-size: 13px; }
+    .modal-body { padding: 20px 15px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: #444; background: #f8fafc; overflow-x: hidden; word-wrap: break-word; }
+
+    #loader { text-align: center; padding: 40px; font-weight: bold; color: var(--blue); font-size: 15px; width: 100%; }
+    .spinner { display: inline-block; width: 18px; height: 18px; border: 3px solid rgba(0, 85, 135, 0.2); border-radius: 50%; border-top-color: var(--cyan); animation: spin 1s linear infinite; vertical-align: middle; margin-right: 8px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .search-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; width: 100%; }
+    .mark { background-color: var(--highlight); font-weight: bold; color: var(--red); padding: 0 2px; border-radius: 2px; }
+
+    /* =========================================
+       모바일(스마트폰) 전용 100% 폭 맞춤 레이아웃
+       ========================================= */
+    @media (max-width: 768px) {
+      .header { padding: 15px; flex-direction: column; align-items: flex-start; gap: 8px; }
+      .header h2 { font-size: 18px; line-height: 1.2; } 
+      
+      /* 모바일에서는 불필요한 좌우 여백을 줄여 화면을 넓게 씁니다 */
+      .content { padding: 10px; }
+      .gii-filter-container { padding: 12px; gap: 10px; margin-bottom: 10px; }
+      
+      .search-grid { grid-template-columns: 1fr; gap: 8px; } /* 검색창 위아래 배치 */
+      
+      /* 터치하기 편하도록 입력창/버튼 크기 조절 */
+      .gii-select { padding: 12px 10px; font-size: 14px; }
+      .search-box { padding: 12px 10px; font-size: 14px; }
+      
+      .data-card { padding: 12px 10px; }
+      .gii-badge { font-size: 11.5px; padding: 4px 8px; margin-bottom: 4px; }
+      
+      .list-wrapper { max-height: 70vh; border: none; border-top: 1px solid var(--border); }
+      .status-bar { font-size: 13px; margin: 8px 0; padding-right: 5px; }
+      
+      .modal-window { border-radius: 4px; }
+      .modal-body { padding: 15px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <div style="display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; width: 100%;">
+      <h2 id="mainTitle">✈️ WORKSHEET ASSIST PORTAL</h2>
+      <span style="font-size: 12px; color: #888; font-weight: 600; white-space: nowrap;">Directed by 그런고래 with 휘년</span>
+    </div>
+  </div>
+  
+  <div class="content">
+    <div id="loader"><span class="spinner"></span>데이터를 불러오는 중입니다...</div>
+    
+    <div id="offlineNotice" style="display:none; text-align:center; padding:10px; background:#e0f2fe; color:var(--blue); font-weight:bold; border-radius:4px; margin-bottom:15px; font-size:13px; border: 1px solid #bae6fd; word-break: keep-all;">
+      ⚡ 오프라인 모드 작동 중 (인터넷 불필요)
+    </div>
+
+    <!-- 통합 검색 인터페이스 영역 -->
+    <div id="mainInterface" style="display: none;">
+      <div class="gii-filter-container">
+        
+        <!-- 1. 시트 선택 -->
+        <div style="width: 100%;">
+          <label class="gii-search-title">1. 데이터 시트 선택</label>
+          <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
+            <select id="sheetSelector" class="gii-select" onchange="initSheetSearch()">
+              <option value="">====== 시트를 선택하세요 ======</option>
+              <option value="jascRaw">📋 JASC CODE (ATA / Desc)</option>
+              <option value="cabinRaw">💺 CABIN CODE (Code / Meaning)</option>
+              <option value="fml">📝 FML LOG (Task / Desc)</option>
+              <option value="gii">⚠️ GII/RII CRITERIA (Fleet/ATA/Req)</option>
+              <option value="nef">🔧 NEF CRITERIA (Cat/Num/Desc)</option>
+            </select>
+            
+            <!-- 규정 모달 버튼 (특정 시트 선택 시 표시) -->
+            <button id="btnGiiModal" class="gii-btn" style="display: none; background-color: var(--blue);" onclick="openModal('giiModal')">📖 GII 규정 보기 ⤢</button>
+            <button id="btnNefModal" class="gii-btn" style="display: none; background-color: var(--blue);" onclick="openNefModal()">📖 NEF 규정 보기 ⤢</button>
+          </div>
+        </div>
+
+        <!-- 2. 다중 검색창 -->
+        <div id="searchControls" class="search-grid" style="display: none;">
+          <div style="width: 100%;">
+            <label class="gii-search-title">2. 1차 전체 검색</label>
+            <input type="text" id="primarySearch" class="search-box" placeholder="검색어 입력 (예: 754, Seat)..." oninput="executeSearch()">
+          </div>
+          <div style="width: 100%;">
+            <label class="gii-search-title">3. 2차 결과 내 검색</label>
+            <input type="text" id="secondarySearch" class="search-box" placeholder="결과 좁히기..." oninput="executeSearch()">
+          </div>
+        </div>
+      </div>
+
+      <div id="searchStatus" class="status-bar">조회할 시트를 선택해 주세요.</div>
+
+      <!-- 검색 결과 출력 영역 -->
+      <div class="list-wrapper">
+        <div id="unifiedResultList">
+          <div style="padding: 40px 10px; text-align: center; color: #999; font-weight: bold; font-size: 15px; word-break: keep-all;">
+            상단의 콤보박스에서 데이터 시트를 선택해 주세요.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GII 규정 모달 -->
+<div id="giiModal" class="modal-overlay">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 class="modal-title">📖 일반검사항목(GII) 규정</h3>
+      <button class="modal-close-btn" onclick="closeModal('giiModal')">닫기 ⤡</button>
+    </div>
+    <div class="modal-body" id="giiModalBody"></div>
+  </div>
+</div>
+
+<!-- NEF 규정 모달 -->
+<div id="nefModal" class="modal-overlay">
+  <div class="modal-window">
+    <div class="modal-header">
+      <h3 class="modal-title">📖 NEF Description 규정</h3>
+      <button class="modal-close-btn" onclick="closeModal('nefModal')">닫기 ⤡</button>
+    </div>
+    <div class="modal-body" id="nefModalBody"></div>
+  </div>
+</div>
+
+<script>
+  // 오프라인 파일 변환용 토큰 (구글 스크립트에서 자동 치환됨)
+  const OFFLINE_DATA = null; 
+  let db = {};
+  let currentSheetData = []; 
+  let currentSheetKey = "";  
+
+  window.onload = function() {
+    if (OFFLINE_DATA) {
+      db = OFFLINE_DATA;
+      setupEnvironment();
+    } else {
+      google.script.run
+        .withSuccessHandler(function(data) {
+          db = data;
+          setupEnvironment();
+        })
+        .withFailureHandler(function(err) {
+          document.getElementById('loader').innerHTML = `<span style="color:red;">데이터 로드 실패: ${err.message}</span>`;
+        })
+        .getAllPortalData();
+    }
+  };
+
+  function setupEnvironment() {
+    document.getElementById('loader').style.display = 'none';
+    document.getElementById('mainInterface').style.display = 'block';
+    if (OFFLINE_DATA) document.getElementById('offlineNotice').style.display = 'block';
+
+    if(db.giiDesc && db.giiDesc.length > 0) {
+      document.getElementById('giiModalBody').innerHTML = `<div style="white-space: pre-wrap;">${db.giiDesc.join('')}</div>`;
+    }
+    if(db.nefDesc && db.nefDesc.length > 0) renderNefDesc(db.nefDesc);
+  }
+
+  function openNefModal() {
+    alert("⚠️ [안전 경고]\n\n항공기 안전을 위해 본 내용은 참조용으로만 사용하십시오.\n최종 작업 결정 및 검증은 반드시 최신 정비 교범(MEL/CDL)을 기준으로 진행해야 합니다.");
+    openModal('nefModal');
+  }
+
+  function renderNefDesc(data) {
+    const modalBody = document.getElementById('nefModalBody');
+    let html = `
+      <div style="background-color: #fff3cd; color: #856404; padding: 12px; border-left: 4px solid #ffeeba; margin-bottom: 15px; font-size: 13px; font-weight: bold; border-radius: 4px; line-height: 1.4; word-break: keep-all;">
+        ⚠️ [주의] 본 화면에서 제공되는 정보는 보조 참조용입니다.<br>
+        실제 정비 시에는 반드시 <b>공식 매뉴얼</b>을 재확인하십시오.
+      </div>
+      <div style="background: white; border: 1px solid var(--border); padding: 15px; border-radius: 4px; white-space: pre-wrap; font-size: 13px;">${data.join('')}</div>
+      <div style="margin-top: 20px; font-size: 11px; color: var(--red); text-align: center; font-weight: bold; word-break: keep-all;">
+        * 복사된 데이터는 실제 작업의 공식 근거 및 증빙으로 사용할 수 없습니다.
+      </div>
+    `;
+    modalBody.innerHTML = html;
+    modalBody.addEventListener('copy', () => {
+      alert("⚠️ [경고] 복사된 데이터는 단순 참고/기록용으로만 사용해야 합니다.");
+    });
+  }
+
+  function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  function initSheetSearch() {
+    currentSheetKey = document.getElementById('sheetSelector').value;
+    const controls = document.getElementById('searchControls');
+    const btnGii = document.getElementById('btnGiiModal');
+    const btnNef = document.getElementById('btnNefModal');
+    
+    btnGii.style.display = (currentSheetKey === 'gii') ? 'flex' : 'none';
+    btnNef.style.display = (currentSheetKey === 'nef') ? 'flex' : 'none';
+
+    if (!currentSheetKey) {
+      controls.style.display = 'none';
+      currentSheetData = [];
+      document.getElementById('searchStatus').innerText = "조회할 시트를 선택해 주세요.";
+      document.getElementById('unifiedResultList').innerHTML = `<div style="padding: 40px 10px; text-align: center; color: #999; font-weight: bold; font-size: 15px; word-break: keep-all;">상단의 콤보박스에서 데이터 시트를 선택해 주세요.</div>`;
+      return;
+    }
+
+    controls.style.display = 'grid';
+    document.getElementById('primarySearch').value = '';
+    document.getElementById('secondarySearch').value = '';
+
+    currentSheetData = Array.isArray(db[currentSheetKey]) ? db[currentSheetKey] : Object.values(db[currentSheetKey]);
+    
+    if (currentSheetKey.includes('Raw') && currentSheetData.length > 0) {
+      currentSheetData = currentSheetData.slice(1);
+    }
+
+    executeSearch(); 
+  }
+
+  function executeSearch() {
+    if(!currentSheetKey || currentSheetData.length === 0) return;
+
+    const pTerm = document.getElementById('primarySearch').value.toLowerCase().trim();
+    const sTerm = document.getElementById('secondarySearch').value.toLowerCase().trim();
+    
+    let filtered = currentSheetData.filter(row => {
+      if(!pTerm) return true;
+      const rowString = JSON.stringify(Object.values(row)).toLowerCase();
+      return rowString.includes(pTerm);
+    });
+
+    if (sTerm) {
+      filtered = filtered.filter(row => {
+        const rowString = JSON.stringify(Object.values(row)).toLowerCase();
+        return rowString.includes(sTerm);
+      });
+    }
+
+    renderUnifiedResults(filtered);
+  }
+
+  function highlightText(text, term1, term2) {
+    if (!text) return "";
+    let res = String(text);
+    if (term1) {
+      const regex1 = new RegExp("(" + term1.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ")", "gi");
+      res = res.replace(regex1, "<span class='mark'>$1</span>");
+    }
+    if (term2) {
+      const regex2 = new RegExp("(" + term2.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ")", "gi");
+      res = res.replace(regex2, "<span class='mark'>$1</span>");
+    }
+    return res;
+  }
+
+  function renderUnifiedResults(data) {
+    const listDiv = document.getElementById('unifiedResultList');
+    const status = document.getElementById('searchStatus');
+    
+    status.innerText = `검색 결과: ${data.length}건`;
+
+    if (data.length === 0) {
+      listDiv.innerHTML = '<div style="padding:40px 10px; text-align:center; color:#999; font-weight:bold; font-size:14px;">조건에 일치하는 데이터가 없습니다.</div>';
+      return;
+    }
+
+    const pTerm = document.getElementById('primarySearch').value.trim();
+    const sTerm = document.getElementById('secondarySearch').value.trim();
+
+    listDiv.innerHTML = data.map(item => {
+      let badges = [];
+      let mainText = '';
+      let subText = '';
+
+      if (currentSheetKey === 'jascRaw') {
+        if(item[0]) badges.push(`<span class="gii-badge fleet">ATA ${item[0]}${item[3] ? ' (' + item[3] + ')' : ''}</span>`);
+        if(item[1]) badges.push(`<span class="gii-badge ata">SEC ${item[1]}${item[4] && item[4] !== 'MAINTENANCE DATA' ? ' (' + item[4] + ')' : ''}</span>`);
+        if(item[2]) badges.push(`<span class="gii-badge type">SUB ${item[2]}</span>`);
+        mainText = item[5] || ''; 
+        subText = item[6] && item[6] !== '-' ? `Remark: ${item[6]}` : '';
+
+      } else if (currentSheetKey === 'cabinRaw') {
+        if(item[0]) badges.push(`<span class="gii-badge code">${item[0]}</span>`);
+        mainText = item[1] || '';
+
+      } else if (currentSheetKey === 'fml') {
+        const isLog = ["O", "YES"].includes(String(item.log).toUpperCase());
+        badges.push(`<span class="gii-badge ${isLog ? 'fleet' : 'girii'}">LOG: ${item.log}</span>`);
+        mainText = item.label || '';
+        subText = item.note && item.note !== '-' ? `Note: ${item.note}` : '';
+
+      } else if (currentSheetKey === 'gii') {
+        if(item.fleet) badges.push(`<span class="gii-badge fleet">${item.fleet}</span>`);
+        if(item.ata) badges.push(`<span class="gii-badge ata">ATA ${item.ata}</span>`);
+        if(item.type) badges.push(`<span class="gii-badge type">${item.type}</span>`);
+        if(item.giiRii) badges.push(`<span class="gii-badge girii">${item.giiRii}</span>`);
+        mainText = item.subject || 'No Requirement Data';
+        subText = item.note ? `Note: ${item.note}` : '';
+
+      } else if (currentSheetKey === 'nef') {
+        if(item.mainSub) badges.push(`<span class="gii-badge fleet">${item.mainSub}</span>`);
+        if(item.number) badges.push(`<span class="gii-badge ata">${item.number}</span>`);
+        mainText = item.discrepancy || 'No Discrepancy Provided';
+        subText = item.note ? `Note / Procedure:\n${item.note}` : '';
+      }
+
+      const highlightedMain = highlightText(mainText, pTerm, sTerm);
+      const highlightedSub = highlightText(subText, pTerm, sTerm);
+
+      return `
+        <div class="data-card">
+          <div style="display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap;">
+            ${badges.join('')}
+          </div>
+          <div style="font-size: 15px; color: var(--navy); line-height: 1.4; font-weight: bold; word-break: keep-all;">
+            ${highlightedMain}
+          </div>
+          ${subText ? `<div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #e2e8f0; font-size: 13px; color: #475569; line-height: 1.4; white-space: pre-wrap; word-break: break-word;">${highlightedSub}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+</script>
+
+</body>
+</html>
